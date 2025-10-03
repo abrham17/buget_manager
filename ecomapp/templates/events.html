@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Events & Deadlines</h1>
+            <p class="text-gray-600 mt-2">Track important business events and deadlines</p>
+        </div>
+        <a href="{% url 'add_event' %}" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+            + Add Event
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <h2 class="text-lg font-semibold mb-4">Filters</h2>
+    <form method="get" class="grid md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                <option value="">All</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="OVERDUE">Overdue</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                <option value="">All</option>
+                <option value="TAX_PAYMENT">Tax Payment</option>
+                <option value="INVOICE_DUE">Invoice Due</option>
+                <option value="LOAN_REPAYMENT">Loan Repayment</option>
+                <option value="MEETING">Meeting</option>
+                <option value="REMINDER">Reminder</option>
+                <option value="OTHER">Other</option>
+            </select>
+        </div>
+        <div class="md:col-span-2">
+            <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                Apply Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="grid md:grid-cols-2 gap-6">
+    {% for event in events %}
+    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition">
+        <div class="flex justify-between items-start mb-4">
+            <h3 class="text-xl font-semibold">{{ event.title }}</h3>
+            <span class="px-3 py-1 rounded text-sm font-medium
+                {% if event.status == 'UPCOMING' %}bg-blue-100 text-blue-800
+                {% elif event.status == 'COMPLETED' %}bg-green-100 text-green-800
+                {% elif event.status == 'OVERDUE' %}bg-red-100 text-red-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ event.status }}
+            </span>
+        </div>
+        
+        {% if event.description %}
+        <p class="text-gray-600 mb-4">{{ event.description }}</p>
+        {% endif %}
+        
+        <div class="space-y-2 text-sm">
+            <div class="flex items-center text-gray-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                {{ event.event_date|date:"M d, Y H:i" }}
+            </div>
+            <div class="flex items-center text-gray-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                {{ event.deadline_type|title|replace:"_":" " }}
+            </div>
+            {% if event.amount %}
+            <div class="flex items-center text-gray-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                ${{ event.amount }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="md:col-span-2 bg-white rounded-lg shadow-lg p-12 text-center">
+        <p class="text-gray-500 text-lg">No events found</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

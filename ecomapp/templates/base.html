@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Merchant Financial Agent{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center">
+                        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="ml-2 text-xl font-bold text-white">MFA</span>
+                    </a>
+                    {% if user.is_authenticated %}
+                    <div class="hidden md:ml-10 md:flex md:space-x-6">
+                        <a href="{% url 'dashboard' %}" class="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium transition">Dashboard</a>
+                        <a href="{% url 'transactions' %}" class="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium transition">Transactions</a>
+                        <a href="{% url 'events' %}" class="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium transition">Events</a>
+                        <a href="{% url 'reports' %}" class="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium transition">Reports</a>
+                        <a href="{% url 'currency_converter' %}" class="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium transition">Currency</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-white text-sm">{{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium transition">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-white hover:text-blue-200 px-4 py-2 text-sm font-medium transition">Login</a>
+                        <a href="{% url 'register' %}" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium transition">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="bg-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-100 border border-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-400 text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p class="text-center text-sm">&copy; 2025 Merchant Financial Agent. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
