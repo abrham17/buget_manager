@@ -362,4 +362,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for Small and Medium Businesses**
 
-*Empowering SMBs with intelligent financial automation through cutting-edge AI technology.*
+*Empowering SMBs with intelligent financial automation through cutting-edge AI technology.*# buget_manager
