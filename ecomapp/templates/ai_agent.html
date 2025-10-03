@@ -5,524 +5,152 @@
 
 {% block extra_css %}
 <style>
-    .chat-container {
-        height: 70vh;
-        border: 1px solid #374151;
-        border-radius: 1rem;
-        overflow-y: auto;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        background-color: #1f2937;
-        scrollbar-width: thin;
-        scrollbar-color: #4b5563 #1f2937;
-    }
-    
-    .chat-container::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .chat-container::-webkit-scrollbar-track {
-        background: #1f2937;
-    }
-    
-    .chat-container::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 3px;
-    }
-    
-    .message {
-        margin-bottom: 1rem;
-        padding: 1rem 1.25rem;
-        border-radius: 1rem;
-        max-width: 85%;
-        word-wrap: break-word;
-        transition: all 0.3s ease;
-    }
-    
-    .user-message {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: white;
-        margin-left: auto;
-        text-align: right;
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
-    }
-    
-    .agent-message {
-        background-color: #374151;
-        border: 1px solid #4b5563;
-        margin-right: auto;
-        color: #f3f4f6;
-    }
-    
-    .message-time {
-        font-size: 0.75rem;
-        opacity: 0.7;
-        margin-top: 0.5rem;
-        font-family: 'JetBrains Mono', monospace;
-    }
-    
-    .input-container {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        background-color: #1f2937;
-        border: 1px solid #374151;
-        border-radius: 2rem;
-        padding: 0.5rem;
-        transition: border-color 0.3s ease;
-    }
-    
-    .input-container:focus-within {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    
-    .message-input {
-        flex: 1;
-        padding: 0.75rem 1rem;
-        background: transparent;
-        border: none;
-        border-radius: 1.5rem;
-        font-size: 1rem;
-        outline: none;
-        color: #f3f4f6;
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .message-input::placeholder {
-        color: #9ca3af;
-    }
-    
-    .send-button {
-        padding: 0.75rem 1.5rem;
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: white;
-        border: none;
-        border-radius: 1.5rem;
-        cursor: pointer;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.3);
-    }
-    
-    .send-button:hover:not(:disabled) {
-        background: linear-gradient(135deg, #1d4ed8, #1e40af);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px -1px rgba(37, 99, 235, 0.4);
-    }
-    
-    .send-button:disabled {
-        background: #6b7280;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
-    
-    .loading {
-        display: none;
-        text-align: center;
-        padding: 1.5rem;
-        color: #9ca3af;
-        font-size: 0.875rem;
-    }
-    
-    .spinner {
-        border: 2px solid #374151;
-        border-top: 2px solid #2563eb;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-        display: inline-block;
-        margin-right: 0.5rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .tool-results {
-        background-color: #065f46;
-        border-left: 4px solid #10b981;
-        padding: 0.75rem;
-        margin-top: 0.75rem;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        color: #d1fae5;
-    }
-    
-    .quick-actions {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .quick-action {
-        padding: 0.5rem 1rem;
-        background-color: #374151;
-        border: 1px solid #4b5563;
-        border-radius: 1.5rem;
-        cursor: pointer;
-        font-size: 0.875rem;
-        color: #d1d5db;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-    
-    .quick-action:hover {
-        background-color: #4b5563;
-        border-color: #2563eb;
-        color: #f3f4f6;
-        transform: translateY(-1px);
-    }
-    
-    .agent-status {
-        padding: 1rem;
-        border-radius: 0.75rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-        font-weight: 500;
-    }
-    
-    .status-healthy {
-        background-color: #064e3b;
-        border: 1px solid #10b981;
-        color: #6ee7b7;
-    }
-    
-    .status-unhealthy {
-        background-color: #7f1d1d;
-        border: 1px solid #ef4444;
-        color: #fca5a5;
-    }
-    
-    .ai-avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #2563eb, #10b981);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 0.75rem;
-        flex-shrink: 0;
-    }
-    
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #1d4ed8, #1e40af);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 0.75rem;
-        flex-shrink: 0;
-    }
-    
-    .message-with-avatar {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-    
-    .message-content {
-        flex: 1;
-        padding: 1rem 1.25rem;
-        border-radius: 1rem;
-        max-width: calc(85% - 3rem);
-        word-wrap: break-word;
-        transition: all 0.3s ease;
-    }
-    
-    .user-message-with-avatar {
-        flex-direction: row-reverse;
-    }
-    
-    .user-message-content {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: white;
-        margin-left: auto;
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
-    }
-    
-    .agent-message-content {
-        background-color: #374151;
-        border: 1px solid #4b5563;
-        color: #f3f4f6;
-    }
+    /* Layout */
+    .agent-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    .chat-shell { background: #0b1220; border-radius: 1rem; overflow: hidden; box-shadow: 0 8px 30px rgba(2,6,23,0.6); }
+
+    /* Chat container */
+    .chat-container { height: 64vh; border: 1px solid #273449; border-radius: 0.75rem; overflow-y: auto; padding: 1.25rem; background: linear-gradient(180deg,#0f1724,#0a1220); scrollbar-width: thin; scrollbar-color: #475569 #0a1220; }
+    .chat-container::-webkit-scrollbar { width: 8px; }
+    .chat-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+
+    /* Message groups */
+    .message-with-avatar { display:flex; gap:0.75rem; align-items:flex-start; margin-bottom:1rem; }
+    .user-message-with-avatar { flex-direction:row-reverse; }
+
+    .ai-avatar, .user-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; font-weight:700; }
+    .ai-avatar { background: linear-gradient(135deg,#065f46,#0ea5a0); }
+    .user-avatar { background: linear-gradient(135deg,#1e40af,#2563eb); }
+    .message-content { max-width: calc(85% - 4rem); padding:0.9rem 1rem; border-radius:0.9rem; font-size:0.95rem; line-height:1.4; box-shadow: 0 6px 16px rgba(2,6,23,0.6); }
+    .agent-message-content { background:#071027; border:1px solid #1f2937; color:#e6f7f2; }
+    .user-message-content { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; text-align:right; }
+    .message-meta { font-size:0.75rem; opacity:0.7; margin-top:0.5rem; font-family:'JetBrains Mono', monospace; }
+
+    /* Quick actions */
+    .quick-actions { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .quick-action { background:#062024; color:#a7f3d0; border-radius:14px; padding:0.5rem 0.9rem; cursor:pointer; border:1px solid #08323a; font-weight:600; display:inline-flex; gap:0.5rem; align-items:center; transition:transform .12s ease, box-shadow .12s ease; }
+    .quick-action:hover, .quick-action:focus { transform:translateY(-3px); box-shadow:0 8px 24px rgba(2,6,23,0.6); outline:none; }
+    .quick-action .label { color:#bfead4; }
+
+    /* Input */
+    .input-row { display:flex; gap:0.75rem; padding:0.9rem; background:#071428; border-top:1px solid #253046; align-items:center; }
+    .message-input { flex:1; padding:0.75rem 1rem; border-radius:9999px; border:1px solid #203040; background:transparent; color:#e6eef6; outline:none; font-size:1rem; }
+    .message-input::placeholder { color:#94a3b8; }
+    .send-button { background: linear-gradient(135deg,#06b6d4,#2563eb); color:#022; border:none; padding:0.6rem 1rem; border-radius:9999px; font-weight:700; cursor:pointer; }
+    .send-button:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+    /* Status & helper */
+    .agent-status { padding:0.6rem 0.9rem; border-radius:10px; font-weight:600; font-size:0.95rem; }
+    .status-healthy { background:#042f2a; border:1px solid #10b981; color:#a7f3d0; }
+    .status-unhealthy { background:#3b0f0f; border:1px solid #ef4444; color:#fecaca; }
+
+    /* Tool results */
+    .tool-results { background:#042f1f; border-left:4px solid #10b981; color:#d1fae5; padding:0.6rem; border-radius:8px; margin-top:0.5rem; }
+
+    /* Responsive */
+    @media (max-width:640px) { .agent-page { padding:1rem; } .chat-container { height:56vh; padding:0.9rem; } .ai-avatar,.user-avatar{width:36px;height:36px} .message-content{font-size:0.92rem} }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header Section -->
-    <div class="mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div>
-                <h1 class="text-4xl font-bold text-white mb-2">🤖 AI Financial Agent</h1>
-                <p class="text-slate-400 text-lg">Your intelligent financial assistant powered by advanced AI</p>
-            </div>
-            <div class="flex items-center space-x-3 mt-4 md:mt-0">
-                <div id="agent-status" class="agent-status">
-                    <div class="spinner"></div> Checking agent status...
-                </div>
-            </div>
-        </div>
+<div class="agent-page">
+  <div class="mb-6 flex items-start justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-white">🤖 AI Financial Agent</h1>
+      <p class="text-slate-400">Smart, finance-first assistant for summaries, forecasts, and currency tools.</p>
     </div>
-    
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-        <div class="quick-action" onclick="sendQuickMessage('Show me my financial summary for last month')">
-            📊 Monthly Summary
-        </div>
-        <div class="quick-action" onclick="sendQuickMessage('Convert 1000 USD to EUR')">
-            💱 Currency Convert
-        </div>
-        <div class="quick-action" onclick="sendQuickMessage('Schedule a meeting with my accountant next Tuesday')">
-            📅 Schedule Meeting
-        </div>
-        <div class="quick-action" onclick="sendQuickMessage('Analyze my expense trends')">
-            📈 Analyze Expenses
-        </div>
-        <div class="quick-action" onclick="sendQuickMessage('What are my upcoming deadlines?')">
-            ⏰ Upcoming Events
-        </div>
-        <div class="quick-action" onclick="sendQuickMessage('Generate a financial forecast')">
-            🔮 Forecast
-        </div>
+    <div class="flex items-center gap-3">
+      <div id="agent-status" class="agent-status">
+        <div class="spinner"></div> Checking agent status...
+      </div>
+      <button class="quick-action tooltip" aria-label="Help" title="Help and tips for the AI Agent">
+        ❔<span class="sr-only">Help</span>
+      </button>
     </div>
-    
-    <!-- Chat Container -->
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-xl overflow-hidden">
-        <div id="chat-container" class="chat-container">
-            <div class="message-with-avatar">
-                <div class="ai-avatar">
-                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                    </svg>
-                </div>
-                <div class="message-content agent-message-content">
-                    <div class="font-semibold text-green-400 mb-2">🤖 AI Financial Agent</div>
-                    <div>Hello! I'm your AI Financial Agent. I can help you with:</div>
-                    <ul class="mt-3 space-y-1">
-                        <li class="flex items-center"><span class="mr-2">📊</span> Generate financial reports and summaries</li>
-                        <li class="flex items-center"><span class="mr-2">💰</span> Convert currencies in real-time</li>
-                        <li class="flex items-center"><span class="mr-2">📅</span> Schedule meetings and manage your calendar</li>
-                        <li class="flex items-center"><span class="mr-2">📈</span> Analyze financial trends and patterns</li>
-                        <li class="flex items-center"><span class="mr-2">⏰</span> Track important deadlines and events</li>
-                        <li class="flex items-center"><span class="mr-2">🔮</span> Create financial forecasts and projections</li>
-                    </ul>
-                    <div class="message-time">{{ "now"|date:"H:i" }}</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Loading Indicator -->
-        <div id="loading" class="loading">
-            <div class="spinner"></div>AI Agent is thinking...
-        </div>
-        
-        <!-- Input Container -->
-        <div class="p-4 bg-slate-700 border-t border-slate-600">
-            <div class="input-container">
-                <input type="text" id="message-input" class="message-input" 
-                       placeholder="Ask me anything about your finances..." 
-                       onkeypress="handleKeyPress(event)">
-                <button id="send-button" class="send-button" onclick="sendMessage()">
-                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                    </svg>
-                    Send
-                </button>
-            </div>
-        </div>
+  </div>
+
+  <div class="chat-shell">
+    <div style="padding:1rem 1.25rem;">
+      <div class="quick-actions">
+        <button class="quick-action" onclick="sendQuickMessage('Show my financial summary for last month')">📊 <span class="label">Monthly Summary</span></button>
+        <button class="quick-action" onclick="sendQuickMessage('What are my top expenses this month?')">💸 <span class="label">Top Expenses</span></button>
+        <button class="quick-action" onclick="sendQuickMessage('Generate a forecast for next month')">🔮 <span class="label">Forecast</span></button>
+        <button class="quick-action" onclick="sendQuickMessage('Convert 1000 USD to EUR')">💱 <span class="label">Currency Convert</span></button>
+      </div>
     </div>
+
+    <div id="chat-container" class="chat-container">
+      <!-- Initial system/agent greeting -->
+      <div class="message-with-avatar">
+        <div class="ai-avatar">AI</div>
+        <div class="message-content agent-message-content">
+          <div class="font-semibold text-green-300 mb-1">Hello — I'm your AI Financial Agent</div>
+          <div class="text-slate-300">I can help with: summaries, forecasts, currency conversion, category analysis, scheduling, and exportable reports. Try the quick actions above to get started.</div>
+          <div class="message-meta">{{ "now"|date:"H:i" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;padding:0.8rem;text-align:center;color:#9ca3af">
+      <div class="spinner"></div> AI Agent is thinking...
+    </div>
+
+    <div class="input-row">
+      <input id="message-input" class="message-input" placeholder="Ask about your finances (e.g., 'Show last month summary')" aria-label="Message to AI agent" onkeypress="handleKeyPress(event)">
+      <button id="send-button" class="send-button" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Keep existing helper functions and wire to new UI when possible
 let isAgentResponding = false;
 
-// Check agent status on page load
-document.addEventListener('DOMContentLoaded', function() {
-    checkAgentStatus();
-});
+document.addEventListener('DOMContentLoaded', function() { checkAgentStatus(); });
 
 async function checkAgentStatus() {
-    try {
-        const response = await fetch('/api/health/');
-        const data = await response.json();
-        
-        const statusElement = document.getElementById('agent-status');
-        if (data.status === 'healthy') {
-            statusElement.className = 'agent-status status-healthy';
-            statusElement.innerHTML = '<i class="fas fa-check-circle"></i> AI Agent is online and ready';
-        } else {
-            statusElement.className = 'agent-status status-unhealthy';
-            statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> AI Agent is experiencing issues';
-        }
-    } catch (error) {
-        const statusElement = document.getElementById('agent-status');
-        statusElement.className = 'agent-status status-unhealthy';
-        statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Cannot connect to AI Agent';
-        console.error('Status check failed:', error);
-    }
+  try {
+    const resp = await fetch('/api/health/');
+    const data = await resp.json();
+    const el = document.getElementById('agent-status');
+    if (data.status === 'healthy') { el.className='agent-status status-healthy'; el.innerText='AI Agent is online'; } else { el.className='agent-status status-unhealthy'; el.innerText='AI Agent experiencing issues'; }
+  } catch (e) { const el = document.getElementById('agent-status'); el.className='agent-status status-unhealthy'; el.innerText='Cannot reach AI Agent'; console.error(e); }
 }
 
-function handleKeyPress(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-    }
-}
+function handleKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }
 
-function sendQuickMessage(message) {
-    document.getElementById('message-input').value = message;
-    sendMessage();
-}
+function sendQuickMessage(message) { document.getElementById('message-input').value = message; sendMessage(); }
 
 async function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const message = messageInput.value.trim();
-    
-    if (!message || isAgentResponding) {
-        return;
-    }
-    
-    // Add user message to chat
-    addMessageToChat(message, 'user');
-    
-    // Clear input and disable send button
-    messageInput.value = '';
-    setAgentResponding(true);
-    
-    try {
-        const response = await fetch('/api/chat/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ message: message })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Add agent response to chat
-            addMessageToChat(data.response, 'agent', data.tool_results);
-        } else {
-            addMessageToChat('Sorry, I encountered an error: ' + data.error, 'agent');
-        }
-    } catch (error) {
-        console.error('Chat error:', error);
-        addMessageToChat('Sorry, I encountered a network error. Please try again.', 'agent');
-    } finally {
-        setAgentResponding(false);
-    }
+  const input = document.getElementById('message-input');
+  const message = input.value.trim();
+  if (!message || isAgentResponding) return;
+  addMessageToChat(message,'user');
+  input.value=''; setAgentResponding(true);
+  try {
+    const resp = await fetch('/api/chat/',{ method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRFToken': getCookie('csrftoken') }, body: JSON.stringify({message}) });
+    const data = await resp.json();
+    if (resp.ok) { addMessageToChat(data.response,'agent', data.tool_results); } else { addMessageToChat('Error: '+(data.error||'Unknown'),'agent'); }
+  } catch(err) { console.error(err); addMessageToChat('Network error. Try again.','agent'); } finally { setAgentResponding(false); }
 }
 
-function addMessageToChat(message, sender, toolResults = null) {
-    const chatContainer = document.getElementById('chat-container');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-with-avatar ${sender === 'user' ? 'user-message-with-avatar' : ''}`;
-    
-    // Create avatar
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = sender === 'user' ? 'user-avatar' : 'ai-avatar';
-    
-    if (sender === 'user') {
-        avatarDiv.innerHTML = `
-            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-        `;
-    } else {
-        avatarDiv.innerHTML = `
-            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-            </svg>
-        `;
-    }
-    
-    // Create message content
-    const messageContentDiv = document.createElement('div');
-    messageContentDiv.className = `message-content ${sender === 'user' ? 'user-message-content' : 'agent-message-content'}`;
-    
-    if (sender === 'agent') {
-        const agentNameDiv = document.createElement('div');
-        agentNameDiv.className = 'font-semibold text-green-400 mb-2';
-        agentNameDiv.textContent = '🤖 AI Financial Agent';
-        messageContentDiv.appendChild(agentNameDiv);
-    }
-    
-    const messageTextDiv = document.createElement('div');
-    messageTextDiv.innerHTML = formatMessage(message);
-    messageContentDiv.appendChild(messageTextDiv);
-    
-    // Add tool results if present
-    if (toolResults && toolResults.length > 0) {
-        const toolResultsDiv = document.createElement('div');
-        toolResultsDiv.className = 'tool-results';
-        toolResultsDiv.innerHTML = `<strong>Actions performed:</strong> ${toolResults.length} operation(s) completed`;
-        messageContentDiv.appendChild(toolResultsDiv);
-    }
-    
-    // Add timestamp
-    const timeDiv = document.createElement('div');
-    timeDiv.className = 'message-time';
-    timeDiv.textContent = new Date().toLocaleTimeString();
-    messageContentDiv.appendChild(timeDiv);
-    
-    // Assemble message
-    messageDiv.appendChild(avatarDiv);
-    messageDiv.appendChild(messageContentDiv);
-    
-    chatContainer.appendChild(messageDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+function addMessageToChat(message, sender, toolResults=null) {
+  const container = document.getElementById('chat-container');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message-with-avatar ' + (sender==='user'?'user-message-with-avatar':'');
+  const avatar = document.createElement('div'); avatar.className = (sender==='user'?'user-avatar':'ai-avatar'); avatar.textContent = sender==='user'?'You':'AI';
+  const content = document.createElement('div'); content.className = 'message-content ' + (sender==='user'?'user-message-content':'agent-message-content');
+  if (sender==='agent') { const h = document.createElement('div'); h.className='font-semibold text-green-300 mb-1'; h.textContent='AI Financial Agent'; content.appendChild(h); }
+  const body = document.createElement('div'); body.innerHTML = formatMessage(message); content.appendChild(body);
+  if (toolResults && toolResults.length>0) { const tr = document.createElement('div'); tr.className='tool-results'; tr.innerHTML = '<strong>Actions:</strong> '+toolResults.length+' operation(s)'; content.appendChild(tr); }
+  const meta = document.createElement('div'); meta.className='message-meta'; meta.textContent = new Date().toLocaleTimeString(); content.appendChild(meta);
+  wrapper.appendChild(avatar); wrapper.appendChild(content); container.appendChild(wrapper); container.scrollTop = container.scrollHeight;
 }
 
-function formatMessage(message) {
-    // Convert line breaks to HTML
-    return message.replace(/\n/g, '<br>');
-}
-
-function setAgentResponding(responding) {
-    isAgentResponding = responding;
-    const sendButton = document.getElementById('send-button');
-    const loading = document.getElementById('loading');
-    const messageInput = document.getElementById('message-input');
-    
-    if (responding) {
-        sendButton.disabled = true;
-        loading.style.display = 'block';
-        messageInput.disabled = true;
-    } else {
-        sendButton.disabled = false;
-        loading.style.display = 'none';
-        messageInput.disabled = false;
-        messageInput.focus();
-    }
-}
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
+function formatMessage(message){ return message.replace(/\n/g,'<br>'); }
+function setAgentResponding(v){ isAgentResponding=v; document.getElementById('send-button').disabled=v; document.getElementById('loading') && (document.getElementById('loading').style.display = v? 'block':'none'); document.getElementById('message-input').disabled=v; }
+function getCookie(name){ let cookieValue=null; if(document.cookie && document.cookie!==''){ const cookies=document.cookie.split(';'); for(let i=0;i<cookies.length;i++){ const c=cookies[i].trim(); if(c.substring(0,name.length+1)===name+'='){ cookieValue=decodeURIComponent(c.substring(name.length+1)); break; } } } return cookieValue; }
 </script>
 {% endblock %}
