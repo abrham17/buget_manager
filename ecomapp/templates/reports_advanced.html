@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+
+{% block title %}Advanced Financial Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .report-generator {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border: 1px solid #475569;
+    }
+    
+    .chart-container {
+        height: 300px;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 0.75rem;
+        border: 1px solid #334155;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border: 1px solid #475569;
+    }
+    
+    .loading-spinner {
+        border: 3px solid #374151;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .report-section {
+        background: rgba(15, 23, 42, 0.3);
+        border: 1px solid #334155;
+        border-radius: 1rem;
+        backdrop-filter: blur(10px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">📊 Advanced Financial Reports</h1>
+                <p class="text-slate-400 text-lg">Comprehensive analytics and insights for your business</p>
+            </div>
+            <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                <div class="flex items-center text-green-400 text-sm">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                    Real-time Data
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generator -->
+    <div class="report-generator rounded-2xl p-6 mb-8 shadow-xl">
+        <div class="flex items-center mb-6">
+            <div class="p-3 bg-blue-500/20 rounded-xl mr-4">
+                <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-white">Generate Custom Report</h2>
+        </div>
+        
+        <form id="report-form" class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Start Date</label>
+                <input type="date" id="start-date" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">End Date</label>
+                <input type="date" id="end-date" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Include Forecasts</label>
+                <select id="include-forecasts" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" id="generate-btn" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg transition font-medium shadow-lg">
+                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Report Buttons -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <button onclick="generateQuickReport('week')" class="report-card bg-slate-800 border border-slate-700 rounded-xl p-4 text-left hover:border-blue-500 transition">
+            <div class="flex items-center mb-2">
+                <div class="p-2 bg-blue-500/20 rounded-lg mr-3">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-white">Weekly</h3>
+            </div>
+            <p class="text-slate-400 text-sm">Last 7 days</p>
+        </button>
+        
+        <button onclick="generateQuickReport('month')" class="report-card bg-slate-800 border border-slate-700 rounded-xl p-4 text-left hover:border-green-500 transition">
+            <div class="flex items-center mb-2">
+                <div class="p-2 bg-green-500/20 rounded-lg mr-3">
+                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-white">Monthly</h3>
+            </div>
+            <p class="text-slate-400 text-sm">Last 30 days</p>
+        </button>
+        
+        <button onclick="generateQuickReport('quarter')" class="report-card bg-slate-800 border border-slate-700 rounded-xl p-4 text-left hover:border-purple-500 transition">
+            <div class="flex items-center mb-2">
+                <div class="p-2 bg-purple-500/20 rounded-lg mr-3">
+                    <svg class="h-5 w-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-white">Quarterly</h3>
+            </div>
+            <p class="text-slate-400 text-sm">Last 90 days</p>
+        </button>
+        
+        <button onclick="generateQuickReport('year')" class="report-card bg-slate-800 border border-slate-700 rounded-xl p-4 text-left hover:border-orange-500 transition">
+            <div class="flex items-center mb-2">
+                <div class="p-2 bg-orange-500/20 rounded-lg mr-3">
+                    <svg class="h-5 w-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-white">Annual</h3>
+            </div>
+            <p class="text-slate-400 text-sm">Last 365 days</p>
+        </button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="hidden text-center py-8">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-slate-400">Generating comprehensive financial report...</p>
+    </div>
+
+    <!-- Report Results -->
+    <div id="report-results" class="hidden">
+        <!-- Financial Summary -->
+        <div class="report-section p-6 mb-6">
+            <h3 class="text-xl font-semibold text-white mb-4">📈 Financial Summary</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="metric-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">Total Income</p>
+                            <p id="total-income" class="text-2xl font-bold text-green-400 number-display">$0</p>
+                        </div>
+                        <div class="p-2 bg-green-500/20 rounded-lg">
+                            <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">Total Expenses</p>
+                            <p id="total-expenses" class="text-2xl font-bold text-red-400 number-display">$0</p>
+                        </div>
+                        <div class="p-2 bg-red-500/20 rounded-lg">
+                            <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">Net Profit</p>
+                            <p id="net-profit" class="text-2xl font-bold text-blue-400 number-display">$0</p>
+                        </div>
+                        <div class="p-2 bg-blue-500/20 rounded-lg">
+                            <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm">Profit Margin</p>
+                            <p id="profit-margin" class="text-2xl font-bold text-yellow-400 number-display">0%</p>
+                        </div>
+                        <div class="p-2 bg-yellow-500/20 rounded-lg">
+                            <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid lg:grid-cols-2 gap-6 mb-6">
+            <div class="report-section p-6">
+                <h3 class="text-xl font-semibold text-white mb-4">📊 Monthly Trends</h3>
+                <div class="chart-container flex items-center justify-center">
+                    <p class="text-slate-400">Chart visualization would go here</p>
+                </div>
+            </div>
+            
+            <div class="report-section p-6">
+                <h3 class="text-xl font-semibold text-white mb-4">💰 Category Breakdown</h3>
+                <div class="chart-container flex items-center justify-center">
+                    <p class="text-slate-400">Pie chart visualization would go here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        <div class="report-section p-6">
+            <h3 class="text-xl font-semibold text-white mb-4">🔍 Detailed Analysis</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-medium text-white mb-3">Top Income Sources</h4>
+                    <div id="top-income-sources" class="space-y-2">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-white mb-3">Largest Expenses</h4>
+                    <div id="largest-expenses" class="space-y-2">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="report-section p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-2">📤 Export Report</h3>
+                    <p class="text-slate-400">Download your report in various formats</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="exportReport('json')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition font-medium">
+                        <svg class="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        JSON
+                    </button>
+                    <button onclick="exportReport('csv')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition font-medium">
+                        <svg class="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default dates
+document.addEventListener('DOMContentLoaded', function() {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
+    document.getElementById('start-date').value = startDate.toISOString().split('T')[0];
+    document.getElementById('end-date').value = endDate.toISOString().split('T')[0];
+});
+
+// Generate custom report
+document.getElementById('report-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const includeForecasts = document.getElementById('include-forecasts').value === 'true';
+    
+    generateCustomReport(startDate, endDate, includeForecasts);
+});
+
+// Generate quick report
+function generateQuickReport(period) {
+    fetch('/api/reports/quick/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            period: period
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayReport(data.report);
+        } else {
+            alert('Error generating report: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating report');
+    });
+}
+
+// Generate custom report
+function generateCustomReport(startDate, endDate, includeForecasts) {
+    showLoading();
+    
+    fetch('/api/reports/generate/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            include_forecasts: includeForecasts,
+            include_trends: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            displayReport(data.report);
+        } else {
+            alert('Error generating report: ' + data.error);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('Error generating report');
+    });
+}
+
+// Display report results
+function displayReport(report) {
+    // Update financial summary
+    const summary = report.financial_summary;
+    document.getElementById('total-income').textContent = '$' + summary.total_income.toLocaleString();
+    document.getElementById('total-expenses').textContent = '$' + summary.total_expenses.toLocaleString();
+    document.getElementById('net-profit').textContent = '$' + summary.net_profit.toLocaleString();
+    document.getElementById('profit-margin').textContent = (summary.profit_margin * 100).toFixed(1) + '%';
+    
+    // Update top income sources
+    const topSources = report.income_analysis.top_sources.slice(0, 5);
+    const incomeSourcesDiv = document.getElementById('top-income-sources');
+    incomeSourcesDiv.innerHTML = topSources.map(source => `
+        <div class="flex justify-between items-center p-2 bg-slate-700/50 rounded">
+            <span class="text-white text-sm">${source.description || 'Unknown'}</span>
+            <span class="text-green-400 font-medium">$${source.total.toLocaleString()}</span>
+        </div>
+    `).join('');
+    
+    // Update largest expenses
+    const largestExpenses = report.expense_analysis.largest_expenses.slice(0, 5);
+    const expensesDiv = document.getElementById('largest-expenses');
+    expensesDiv.innerHTML = largestExpenses.map(expense => `
+        <div class="flex justify-between items-center p-2 bg-slate-700/50 rounded">
+            <span class="text-white text-sm">${expense.description || 'Unknown'}</span>
+            <span class="text-red-400 font-medium">$${expense.amount.toLocaleString()}</span>
+        </div>
+    `).join('');
+    
+    // Show results
+    document.getElementById('report-results').classList.remove('hidden');
+    document.getElementById('report-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Export report
+function exportReport(format) {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    
+    window.open(`/api/reports/export/${format}/?start_date=${startDate}&end_date=${endDate}`, '_blank');
+}
+
+// Show/hide loading
+function showLoading() {
+    document.getElementById('loading-indicator').classList.remove('hidden');
+    document.getElementById('report-results').classList.add('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-indicator').classList.add('hidden');
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+
+

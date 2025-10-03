@@ -19,5 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('ecomapp.urls')),  # Replace 'your_app_name' with the actual name of your app
+    path('', include('ecomapp.urls')),
+    path('api/', include('api.urls')),  # Merchant Financial Agent API
+    path('api/reports/', include('reporting.urls')),  # Advanced Reporting Engine
 ]

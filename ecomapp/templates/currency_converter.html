@@ -1,110 +1,206 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Currency Converter</h1>
-    <p class="text-gray-600 mt-2">Real-time foreign exchange rate conversion</p>
-</div>
-
-<div class="grid md:grid-cols-2 gap-8">
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-xl font-semibold mb-6">Convert Currency</h2>
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Amount*</label>
-                <input type="number" name="amount" step="0.01" required 
-                       value="{% if result %}{{ result.amount }}{% else %}100{% endif %}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                       placeholder="Enter amount">
+                <h1 class="text-4xl font-bold text-white mb-2">💱 Currency Converter</h1>
+                <p class="text-slate-400 text-lg">Real-time foreign exchange rate conversion with live data</p>
             </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">From Currency*</label>
-                <input type="text" name="from_currency" maxlength="3" required 
-                       value="{% if result %}{{ result.from_currency }}{% else %}USD{% endif %}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                       placeholder="USD">
-                <p class="text-xs text-gray-500 mt-1">3-letter currency code (e.g., USD, EUR, GBP)</p>
+            <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                <div class="flex items-center text-green-400 text-sm">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                    Live Rates
+                </div>
             </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">To Currency*</label>
-                <input type="text" name="to_currency" maxlength="3" required 
-                       value="{% if result %}{{ result.to_currency }}{% else %}EUR{% endif %}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                       placeholder="EUR">
-                <p class="text-xs text-gray-500 mt-1">3-letter currency code (e.g., USD, EUR, GBP)</p>
-            </div>
-            
-            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-800 transition font-medium">
-                Convert
-            </button>
-        </form>
+        </div>
     </div>
 
-    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg p-8 text-white">
-        <h2 class="text-xl font-semibold mb-6">Conversion Result</h2>
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Converter Form -->
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-xl">
+            <div class="flex items-center mb-6">
+                <div class="p-3 bg-blue-500/20 rounded-xl mr-4">
+                    <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-white">Convert Currency</h2>
+            </div>
+            
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Amount*</label>
+                    <input type="number" name="amount" step="0.01" required 
+                           value="{% if result %}{{ result.amount }}{% else %}100{% endif %}"
+                           class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white number-display" 
+                           placeholder="Enter amount">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">From Currency*</label>
+                        <input type="text" name="from_currency" maxlength="3" required 
+                               value="{% if result %}{{ result.from_currency }}{% else %}USD{% endif %}"
+                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white uppercase" 
+                               placeholder="USD">
+                        <p class="text-xs text-slate-400 mt-1">3-letter code</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">To Currency*</label>
+                        <input type="text" name="to_currency" maxlength="3" required 
+                               value="{% if result %}{{ result.to_currency }}{% else %}EUR{% endif %}"
+                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white uppercase" 
+                               placeholder="EUR">
+                        <p class="text-xs text-slate-400 mt-1">3-letter code</p>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg transition font-medium shadow-lg">
+                    <svg class="h-5 w-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                    </svg>
+                    Convert Currency
+                </button>
+            </form>
+        </div>
+
+        <!-- Conversion Result -->
+        <div class="card-hover bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-8 text-white">
+                <div class="flex items-center mb-6">
+                    <div class="p-3 bg-white/20 rounded-xl mr-4">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold">Conversion Result</h2>
+                </div>
+                
+                {% if result %}
+                <div class="space-y-6">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <p class="text-sm opacity-90 mb-2">Original Amount</p>
+                        <p class="text-3xl font-bold number-display">{{ result.amount }} {{ result.from_currency }}</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-center">
+                        <div class="bg-white/20 rounded-full p-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <p class="text-sm opacity-90 mb-2">Converted Amount</p>
+                        <p class="text-3xl font-bold text-green-300 number-display">{{ result.converted_amount|floatformat:2 }} {{ result.to_currency }}</p>
+                    </div>
+                    
+                    <div class="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <p class="text-sm opacity-90 mb-1">Exchange Rate</p>
+                        <p class="text-lg font-semibold number-display">1 {{ result.from_currency }} = {{ result.rate|floatformat:6 }} {{ result.to_currency }}</p>
+                        <p class="text-xs opacity-75 mt-2">Rate updated: {{ "now"|date:"H:i" }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="h-full flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-lg opacity-75">Enter an amount and currencies to convert</p>
+                        <p class="text-sm opacity-50 mt-2">Get real-time exchange rates instantly</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Currency Codes Reference -->
+    <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 mt-8 shadow-xl">
+        <div class="flex items-center mb-6">
+            <div class="p-3 bg-green-500/20 rounded-xl mr-4">
+                <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white">Popular Currency Codes</h3>
+        </div>
+        <div class="grid md:grid-cols-4 gap-6 text-sm">
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">USD</span>
+                    <span class="text-slate-400">US Dollar</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">EUR</span>
+                    <span class="text-slate-400">Euro</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">GBP</span>
+                    <span class="text-slate-400">British Pound</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">JPY</span>
+                    <span class="text-slate-400">Japanese Yen</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">CHF</span>
+                    <span class="text-slate-400">Swiss Franc</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">CAD</span>
+                    <span class="text-slate-400">Canadian Dollar</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">AUD</span>
+                    <span class="text-slate-400">Australian Dollar</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">CNY</span>
+                    <span class="text-slate-400">Chinese Yuan</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">INR</span>
+                    <span class="text-slate-400">Indian Rupee</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">ETB</span>
+                    <span class="text-slate-400">Ethiopian Birr</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">NGN</span>
+                    <span class="text-slate-400">Nigerian Naira</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg">
+                    <span class="font-medium text-white">ZAR</span>
+                    <span class="text-slate-400">South African Rand</span>
+                </div>
+            </div>
+        </div>
         
-        {% if result %}
-        <div class="space-y-6">
-            <div class="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur-sm">
-                <p class="text-sm opacity-90 mb-2">Amount</p>
-                <p class="text-3xl font-bold">{{ result.amount }} {{ result.from_currency }}</p>
-            </div>
-            
-            <div class="flex items-center justify-center">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+        <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <p class="text-blue-300 text-sm">
+                <svg class="h-4 w-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-            </div>
-            
-            <div class="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur-sm">
-                <p class="text-sm opacity-90 mb-2">Converted Amount</p>
-                <p class="text-3xl font-bold">{{ result.converted_amount|floatformat:2 }} {{ result.to_currency }}</p>
-            </div>
-            
-            <div class="border-t border-white border-opacity-30 pt-4">
-                <p class="text-sm opacity-90">Exchange Rate</p>
-                <p class="text-lg font-semibold">1 {{ result.from_currency }} = {{ result.rate|floatformat:6 }} {{ result.to_currency }}</p>
-            </div>
-        </div>
-        {% else %}
-        <div class="h-full flex items-center justify-center">
-            <div class="text-center">
-                <svg class="w-20 h-20 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p class="text-lg opacity-75">Enter an amount and currencies to convert</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
-    <h3 class="text-lg font-semibold text-blue-900 mb-2">Popular Currency Codes</h3>
-    <div class="grid md:grid-cols-4 gap-4 text-sm text-blue-800">
-        <div>
-            <p class="font-medium">USD - US Dollar</p>
-            <p class="font-medium">EUR - Euro</p>
-            <p class="font-medium">GBP - British Pound</p>
-        </div>
-        <div>
-            <p class="font-medium">JPY - Japanese Yen</p>
-            <p class="font-medium">CHF - Swiss Franc</p>
-            <p class="font-medium">CAD - Canadian Dollar</p>
-        </div>
-        <div>
-            <p class="font-medium">AUD - Australian Dollar</p>
-            <p class="font-medium">CNY - Chinese Yuan</p>
-            <p class="font-medium">INR - Indian Rupee</p>
-        </div>
-        <div>
-            <p class="font-medium">ETB - Ethiopian Birr</p>
-            <p class="font-medium">NGN - Nigerian Naira</p>
-            <p class="font-medium">ZAR - South African Rand</p>
+                <strong>Tip:</strong> All currency codes are 3-letter ISO codes. Exchange rates are updated in real-time from multiple reliable sources.
+            </p>
         </div>
     </div>
 </div>

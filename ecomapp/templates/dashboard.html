@@ -1,102 +1,169 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
-    <p class="text-gray-600 mt-2">Welcome back, {{ user.username }}! Here's your financial overview.</p>
-</div>
-
-<div class="grid md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-        <h3 class="text-sm font-medium opacity-90">Total Income</h3>
-        <p class="text-3xl font-bold mt-2">${{ total_income }}</p>
-        <p class="text-sm opacity-75 mt-2">Last 30 days: ${{ monthly_income }}</p>
-    </div>
-    
-    <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
-        <h3 class="text-sm font-medium opacity-90">Total Expenses</h3>
-        <p class="text-3xl font-bold mt-2">${{ total_expenses }}</p>
-        <p class="text-sm opacity-75 mt-2">Last 30 days: ${{ monthly_expenses }}</p>
-    </div>
-    
-    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-        <h3 class="text-sm font-medium opacity-90">Net Balance</h3>
-        <p class="text-3xl font-bold mt-2">${{ net_balance }}</p>
-        <p class="text-sm opacity-75 mt-2">Last 30 days: ${{ monthly_net }}</p>
-    </div>
-</div>
-
-<div class="grid md:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-lg p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold">Recent Transactions</h2>
-            <a href="{% url 'transactions' %}" class="text-blue-600 hover:text-blue-800 text-sm">View All</a>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">Financial Dashboard</h1>
+                <p class="text-slate-400 text-lg">Welcome back, {{ user.username }}! Here's your financial overview.</p>
+            </div>
+            <div class="flex space-x-3 mt-4 md:mt-0">
+                <a href="{% url 'google_calendar_auth' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    📅 Connect Calendar
+                </a>
+                <a href="{% url 'ai_agent' %}" class="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                    🤖 AI Assistant
+                </a>
+            </div>
         </div>
-        <div class="space-y-3">
-            {% for transaction in recent_transactions %}
-            <div class="flex justify-between items-center border-b pb-3">
-                <div>
-                    <p class="font-medium">{{ transaction.description|truncatewords:5 }}</p>
-                    <p class="text-sm text-gray-500">{{ transaction.transaction_date|date:"M d, Y" }}</p>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-green-500/20 rounded-xl">
+                    <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
                 </div>
-                <span class="{% if transaction.transaction_type == 'INCOME' %}text-green-600{% else %}text-red-600{% endif %} font-semibold">
-                    {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}${{ transaction.amount }}
-                </span>
+                <span class="text-green-400 text-sm font-medium">Income</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white number-display mb-2">${{ total_income }}</h3>
+            <p class="text-slate-400 text-sm">Last 30 days: <span class="text-green-400 font-medium">${{ monthly_income }}</span></p>
+        </div>
+        
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-red-500/20 rounded-xl">
+                    <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                    </svg>
+                </div>
+                <span class="text-red-400 text-sm font-medium">Expenses</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white number-display mb-2">${{ total_expenses }}</h3>
+            <p class="text-slate-400 text-sm">Last 30 days: <span class="text-red-400 font-medium">${{ monthly_expenses }}</span></p>
+        </div>
+        
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-blue-500/20 rounded-xl">
+                    <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <span class="{% if net_balance >= 0 %}text-green-400{% else %}text-red-400{% endif %} text-sm font-medium">Net Balance</span>
+            </div>
+            <h3 class="text-3xl font-bold {% if net_balance >= 0 %}text-green-400{% else %}text-red-400{% endif %} number-display mb-2">${{ net_balance }}</h3>
+            <p class="text-slate-400 text-sm">Last 30 days: <span class="{% if monthly_net >= 0 %}text-green-400{% else %}text-red-400{% endif %} font-medium">${{ monthly_net }}</span></p>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+        <!-- Recent Transactions Card -->
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-white">Recent Transactions</h2>
+                <a href="{% url 'transactions' %}" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition">View All</a>
+            </div>
+            <div class="space-y-4">
+                {% for transaction in recent_transactions %}
+                <div class="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div class="flex-1">
+                        <p class="font-medium text-white text-sm">{{ transaction.description|truncatewords:4 }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ transaction.transaction_date|date:"M d, Y" }} • {{ transaction.category.name|default:"Uncategorized" }}</p>
+                    </div>
+                    <span class="{% if transaction.transaction_type == 'INCOME' %}text-green-400{% else %}text-red-400{% endif %} font-semibold number-display">
+                        {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}${{ transaction.amount }}
+                    </span>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <svg class="h-12 w-12 text-slate-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="text-slate-400 text-sm">No transactions yet</p>
+                </div>
+                {% endfor %}
+            </div>
+            <a href="{% url 'add_transaction' %}" class="mt-4 block text-center bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition">
+                + Add Transaction
+            </a>
+        </div>
+
+        <!-- Upcoming Events Card -->
+        <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-white">Upcoming Events</h2>
+                <a href="{% url 'events' %}" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition">View All</a>
+            </div>
+            
+            {% if overdue_events > 0 %}
+            <div class="bg-red-900/30 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg mb-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <p class="text-sm font-medium">{{ overdue_events }} overdue event(s)</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="space-y-4">
+                {% for event in upcoming_events %}
+                <div class="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div class="flex-1">
+                        <p class="font-medium text-white text-sm">{{ event.title|truncatewords:4 }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ event.event_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">{{ event.deadline_type }}</span>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <svg class="h-12 w-12 text-slate-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-slate-400 text-sm">No upcoming events</p>
+                </div>
+                {% endfor %}
+            </div>
+            <a href="{% url 'add_event' %}" class="mt-4 block text-center bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition">
+                + Add Event
+            </a>
+        </div>
+    </div>
+
+    <!-- Expense Categories Chart -->
+    <div class="card-hover bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-white">Top Expense Categories (Last 30 Days)</h2>
+            <span class="text-slate-400 text-sm">Total: ${{ monthly_expenses }}</span>
+        </div>
+        <div class="space-y-4">
+            {% for cat in expense_by_category %}
+            <div class="group">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-white">{{ cat.category__name|default:"Uncategorized" }}</span>
+                    <span class="text-sm font-semibold text-slate-300 number-display">${{ cat.total }}</span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-300 group-hover:from-blue-400 group-hover:to-cyan-300" 
+                         style="width: {% widthratio cat.total monthly_expenses 100 %}%"></div>
+                </div>
             </div>
             {% empty %}
-            <p class="text-gray-500 text-center py-4">No transactions yet</p>
+            <div class="text-center py-8">
+                <svg class="h-12 w-12 text-slate-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <p class="text-slate-400 text-sm">No expense data available</p>
+            </div>
             {% endfor %}
         </div>
-        <a href="{% url 'add_transaction' %}" class="mt-4 block text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-            Add Transaction
-        </a>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-lg p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold">Upcoming Events</h2>
-            <a href="{% url 'events' %}" class="text-blue-600 hover:text-blue-800 text-sm">View All</a>
-        </div>
-        {% if overdue_events > 0 %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4">
-            <p class="text-sm font-medium">{{ overdue_events }} overdue event(s)</p>
-        </div>
-        {% endif %}
-        <div class="space-y-3">
-            {% for event in upcoming_events %}
-            <div class="flex justify-between items-center border-b pb-3">
-                <div>
-                    <p class="font-medium">{{ event.title|truncatewords:5 }}</p>
-                    <p class="text-sm text-gray-500">{{ event.event_date|date:"M d, Y H:i" }}</p>
-                </div>
-                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">{{ event.deadline_type }}</span>
-            </div>
-            {% empty %}
-            <p class="text-gray-500 text-center py-4">No upcoming events</p>
-            {% endfor %}
-        </div>
-        <a href="{% url 'add_event' %}" class="mt-4 block text-center bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
-            Add Event
-        </a>
-    </div>
-</div>
-
-<div class="bg-white rounded-lg shadow-lg p-6">
-    <h2 class="text-xl font-semibold mb-4">Top Expense Categories (Last 30 Days)</h2>
-    <div class="space-y-3">
-        {% for cat in expense_by_category %}
-        <div>
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-sm font-medium">{{ cat.category__name|default:"Uncategorized" }}</span>
-                <span class="text-sm font-semibold">${{ cat.total }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full" style="width: {% widthratio cat.total monthly_expenses 100 %}%"></div>
-            </div>
-        </div>
-        {% empty %}
-        <p class="text-gray-500 text-center py-4">No expense data available</p>
-        {% endfor %}
     </div>
 </div>
 {% endblock %}
