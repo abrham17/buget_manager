@@ -5,101 +5,410 @@
 
 {% block extra_css %}
 <style>
-    /* Layout */
-    .agent-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-    .chat-shell { background: #0b1220; border-radius: 1rem; overflow: hidden; box-shadow: 0 8px 30px rgba(2,6,23,0.6); }
+    :root {
+        --primary: #2563eb;
+        --secondary: #1d4ed8;
+        --accent: #10b981;
+        --background: #1f2937;
+        --card-bg: #374151;
+        --text: #f3f4f6;
+        --text-muted: #9ca3af;
+        --border: #4b5563;
+    }
 
-    /* Chat container */
-    .chat-container { height: 64vh; border: 1px solid #273449; border-radius: 0.75rem; overflow-y: auto; padding: 1.25rem; background: linear-gradient(180deg,#0f1724,#0a1220); scrollbar-width: thin; scrollbar-color: #475569 #0a1220; }
-    .chat-container::-webkit-scrollbar { width: 8px; }
-    .chat-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+    body {
+        background-color: var(--background);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        overflow-x: hidden;
+    }
 
-    /* Message groups */
-    .message-with-avatar { display:flex; gap:0.75rem; align-items:flex-start; margin-bottom:1rem; }
-    .user-message-with-avatar { flex-direction:row-reverse; }
+    .main-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 100%;
+        padding: 1.5rem;
+        box-sizing: border-box;
+    }
 
-    .ai-avatar, .user-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; font-weight:700; }
-    .ai-avatar { background: linear-gradient(135deg,#065f46,#0ea5a0); }
-    .user-avatar { background: linear-gradient(135deg,#1e40af,#2563eb); }
-    .message-content { max-width: calc(85% - 4rem); padding:0.9rem 1rem; border-radius:0.9rem; font-size:0.95rem; line-height:1.4; box-shadow: 0 6px 16px rgba(2,6,23,0.6); }
-    .agent-message-content { background:#071027; border:1px solid #1f2937; color:#e6f7f2; }
-    .user-message-content { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; text-align:right; }
-    .message-meta { font-size:0.75rem; opacity:0.7; margin-top:0.5rem; font-family:'JetBrains Mono', monospace; }
+    .chat-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        max-width: 7xl;
+        margin: 0 auto;
+        width: 100%;
+    }
 
-    /* Quick actions */
-    .quick-actions { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; }
-    .quick-action { background:#062024; color:#a7f3d0; border-radius:14px; padding:0.5rem 0.9rem; cursor:pointer; border:1px solid #08323a; font-weight:600; display:inline-flex; gap:0.5rem; align-items:center; transition:transform .12s ease, box-shadow .12s ease; }
-    .quick-action:hover, .quick-action:focus { transform:translateY(-3px); box-shadow:0 8px 24px rgba(2,6,23,0.6); outline:none; }
-    .quick-action .label { color:#bfead4; }
+    .chat-container {
+        flex: 1;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow-y: auto;
+        padding: 2rem;
+        background-color: var(--card-bg);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        margin-bottom: 6rem; /* Space for fixed input */
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary) var(--card-bg);
+    }
 
-    /* Input */
-    .input-row { display:flex; gap:0.75rem; padding:0.9rem; background:#071428; border-top:1px solid #253046; align-items:center; }
-    .message-input { flex:1; padding:0.75rem 1rem; border-radius:9999px; border:1px solid #203040; background:transparent; color:#e6eef6; outline:none; font-size:1rem; }
-    .message-input::placeholder { color:#94a3b8; }
-    .send-button { background: linear-gradient(135deg,#06b6d4,#2563eb); color:#022; border:none; padding:0.6rem 1rem; border-radius:9999px; font-weight:700; cursor:pointer; }
-    .send-button:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .chat-container::-webkit-scrollbar {
+        width: 6px;
+    }
 
-    /* Status & helper */
-    .agent-status { padding:0.6rem 0.9rem; border-radius:10px; font-weight:600; font-size:0.95rem; }
-    .status-healthy { background:#042f2a; border:1px solid #10b981; color:#a7f3d0; }
-    .status-unhealthy { background:#3b0f0f; border:1px solid #ef4444; color:#fecaca; }
+    .chat-container::-webkit-scrollbar-track {
+        background: var(--card-bg);
+        border-radius: 16px;
+    }
 
-    /* Tool results */
-    .tool-results { background:#042f1f; border-left:4px solid #10b981; color:#d1fae5; padding:0.6rem; border-radius:8px; margin-top:0.5rem; }
+    .chat-container::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 16px;
+    }
 
-    /* Responsive */
-    @media (max-width:640px) { .agent-page { padding:1rem; } .chat-container { height:56vh; padding:0.9rem; } .ai-avatar,.user-avatar{width:36px;height:36px} .message-content{font-size:0.92rem} }
+    .message-with-avatar {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .message-with-avatar:hover {
+        transform: translateY(-2px);
+    }
+
+    .message-content {
+        padding: 1.25rem 1.75rem;
+        border-radius: 12px;
+        max-width: calc(80% - 3rem);
+        word-wrap: break-word;
+        position: relative;
+        backdrop-filter: blur(5px);
+        border: 1px solid var(--border);
+    }
+
+    .user-message-with-avatar {
+        flex-direction: row-reverse;
+    }
+
+    .user-message-content {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        margin-left: 1rem;
+        border: none;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .agent-message-content {
+        background-color: rgba(55, 65, 81, 0.8);
+        color: var(--text);
+        margin-right: 1rem;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.75rem;
+        font-family: 'Roboto Mono', monospace;
+        opacity: 0.8;
+    }
+
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        background-color: rgba(55, 65, 81, 0.95);
+        border-top: 1px solid var(--border);
+        padding: 1rem 1.5rem;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        z-index: 10;
+        max-width: 7xl;
+        margin: 0 auto;
+    }
+
+    .input-container:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 -4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .message-input {
+        flex: 1;
+        padding: 0.75rem 1.25rem;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        outline: none;
+        color: var(--text);
+        transition: all 0.3s ease;
+    }
+
+    .message-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    .send-button {
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .send-button:hover:not(:disabled) {
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .send-button:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .spinner {
+        border: 3px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+        margin-right: 0.75rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .tool-results {
+        background-color: rgba(11, 59, 47, 0.8);
+        border-left: 4px solid var(--accent);
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #d1fae5;
+        line-height: 1.5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .quick-action {
+        padding: 0.75rem 1.25rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--text);
+        text-align: center;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-action:hover {
+        background: linear-gradient(135deg, #4b5563, #374151);
+        border-color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .agent-status {
+        padding: 0.75rem 1.75rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        backdrop-filter: blur(5px);
+    }
+
+    .status-healthy {
+        background: linear-gradient(135deg, rgba(11, 59, 47, 0.8), rgba(16, 185, 129, 0.2));
+        color: #6ee7b7;
+        border: 1px solid var(--accent);
+    }
+
+    .status-unhealthy {
+        background: linear-gradient(135deg, rgba(127, 29, 29, 0.8), rgba(239, 68, 68, 0.2));
+        color: #fca5a5;
+        border: 1px solid #ef4444;
+    }
+
+    .ai-avatar, .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .ai-avatar {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    .user-avatar {
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+    }
+
+    .header-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0 rejuvenation, 0.2);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 1rem;
+        }
+
+        .input-container {
+            padding: 1rem;
+        }
+
+        .chat-container {
+            padding: 1.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="agent-page">
-  <div class="mb-6 flex items-start justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-white">🤖 AI Financial Agent</h1>
-      <p class="text-slate-400">Smart, finance-first assistant for summaries, forecasts, and currency tools.</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <div id="agent-status" class="agent-status">
-        <div class="spinner"></div> Checking agent status...
-      </div>
-      <button class="quick-action tooltip" aria-label="Help" title="Help and tips for the AI Agent">
-        ❔<span class="sr-only">Help</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="chat-shell">
-    <div style="padding:1rem 1.25rem;">
-      <div class="quick-actions">
-        <button class="quick-action" onclick="sendQuickMessage('Show my financial summary for last month')">📊 <span class="label">Monthly Summary</span></button>
-        <button class="quick-action" onclick="sendQuickMessage('What are my top expenses this month?')">💸 <span class="label">Top Expenses</span></button>
-        <button class="quick-action" onclick="sendQuickMessage('Generate a forecast for next month')">🔮 <span class="label">Forecast</span></button>
-        <button class="quick-action" onclick="sendQuickMessage('Convert 1000 USD to EUR')">💱 <span class="label">Currency Convert</span></button>
-      </div>
-    </div>
-
-    <div id="chat-container" class="chat-container">
-      <!-- Initial system/agent greeting -->
-      <div class="message-with-avatar">
-        <div class="ai-avatar">AI</div>
-        <div class="message-content agent-message-content">
-          <div class="font-semibold text-green-300 mb-1">Hello — I'm your AI Financial Agent</div>
-          <div class="text-slate-300">I can help with: summaries, forecasts, currency conversion, category analysis, scheduling, and exportable reports. Try the quick actions above to get started.</div>
-          <div class="message-meta">{{ "now"|date:"H:i" }}</div>
+<div class="main-container">
+    <div class="chat-wrapper">
+        <!-- Header Section -->
+        <div class="header-container">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h1 class="text-4xl font-bold text-white tracking-tight">🤖 AI Financial Agent</h1>
+                    <p class="text-gray-400 text-lg mt-3 max-w-2xl">Your intelligent financial partner for seamless money management.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="agent-status" class="agent-status">
+                        <div class="spinner"></div> Checking status...
+                    </div>
+                    <button onclick="clearChat()" class="bg-gray-600 border border-gray-500 hover:bg-gray-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md">Clear Chat</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <div id="loading" class="loading" style="display:none;padding:0.8rem;text-align:center;color:#9ca3af">
-      <div class="spinner"></div> AI Agent is thinking...
-    </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="quick-action" onclick="sendQuickMessage('Show me my financial summary for last month')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Monthly Summary
+            </div>
+            <div class="quick-action" onclick="sendQuickMessage('Convert 1000 USD to EUR')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                Currency Convert
+            </div>
+            <div class="quick-action" onclick="sendQuickMessage('Schedule a meeting with my accountant next Tuesday')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Schedule Meeting
+            </div>
+            <div class="quick-action" onclick="sendQuickMessage('Analyze my expense trends')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Analyze Expenses
+            </div>
+            <div class="quick-action" onclick="sendQuickMessage('What are my upcoming deadlines?')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 IDL 9 0 0118 0z"/></svg>
+                Upcoming Events
+            </div>
+            <div class="quick-action" onclick="sendQuickMessage('Generate a financial forecast')">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+                Forecast
+            </div>
+        </div>
 
-    <div class="input-row">
-      <input id="message-input" class="message-input" placeholder="Ask about your finances (e.g., 'Show last month summary')" aria-label="Message to AI agent" onkeypress="handleKeyPress(event)">
-      <button id="send-button" class="send-button" onclick="sendMessage()">Send</button>
+        <!-- Chat Container -->
+        <div class="chat-container" id="chat-container">
+            <div class="message-with-avatar">
+                <div class="ai-avatar">
+                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="message-content agent-message-content">
+                    <div class="font-semibold text-green-400 mb-3 tracking-tight">🤖 AI Financial Agent</div>
+                    <div class="text-gray-200">Welcome to your personal financial assistant. I can assist with:</div>
+                    <ul class="mt-4 space-y-3 text-gray-300">
+                        <li class="flex items-center"><span class="mr-3">📊</span> Detailed financial reports and summaries</li>
+                        <li class="flex items-center"><span class="mr-3">💰</span> Real-time currency conversions</li>
+                        <li class="flex items-center"><span class="mr-3">📅</span> Seamless meeting and calendar management</li>
+                        <li class="flex items-center"><span class="mr-3">📈</span> In-depth financial trend analysis</li>
+                        <li class="flex items-center"><span class="mr-3">⏰</span> Tracking of deadlines and key events</li>
+                        <li class="flex items-center"><span class="mr-3">🔮</span> Advanced financial forecasts and projections</li>
+                    </ul>
+                    <div class="message-time">{{ "now"|date:"H:i" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>Processing your request...
+        </div>
+
+        <!-- Input Container -->
+        <div class="input-container">
+            <input type="text" id="message-input" class="message-input" 
+                   placeholder="Ask about your financial needs..." 
+                   onkeypress="handleKeyPress(event)">
+            <button id="send-button" class="send-button">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+                Send
+            </button>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
@@ -108,15 +417,29 @@
 // Keep existing helper functions and wire to new UI when possible
 let isAgentResponding = false;
 
-document.addEventListener('DOMContentLoaded', function() { checkAgentStatus(); });
+document.addEventListener('DOMContentLoaded', function() {
+    checkAgentStatus();
+});
 
 async function checkAgentStatus() {
-  try {
-    const resp = await fetch('/api/health/');
-    const data = await resp.json();
-    const el = document.getElementById('agent-status');
-    if (data.status === 'healthy') { el.className='agent-status status-healthy'; el.innerText='AI Agent is online'; } else { el.className='agent-status status-unhealthy'; el.innerText='AI Agent experiencing issues'; }
-  } catch (e) { const el = document.getElementById('agent-status'); el.className='agent-status status-unhealthy'; el.innerText='Cannot reach AI Agent'; console.error(e); }
+    try {
+        const response = await fetch('/api/health/');
+        const data = await response.json();
+        
+        const statusElement = document.getElementById('agent-status');
+        if (data.status === 'healthy') {
+            statusElement.className = 'agent-status status-healthy';
+            statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Online';
+        } else {
+            statusElement.className = 'agent-status status-unhealthy';
+            statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Offline';
+        }
+    } catch (error) {
+        const statusElement = document.getElementById('agent-status');
+        statusElement.className = 'agent-status status-unhealthy';
+        statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Error';
+        console.error('Status check failed:', error);
+    }
 }
 
 function handleKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }
@@ -124,33 +447,146 @@ function handleKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey) {
 function sendQuickMessage(message) { document.getElementById('message-input').value = message; sendMessage(); }
 
 async function sendMessage() {
-  const input = document.getElementById('message-input');
-  const message = input.value.trim();
-  if (!message || isAgentResponding) return;
-  addMessageToChat(message,'user');
-  input.value=''; setAgentResponding(true);
-  try {
-    const resp = await fetch('/api/chat/',{ method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRFToken': getCookie('csrftoken') }, body: JSON.stringify({message}) });
-    const data = await resp.json();
-    if (resp.ok) { addMessageToChat(data.response,'agent', data.tool_results); } else { addMessageToChat('Error: '+(data.error||'Unknown'),'agent'); }
-  } catch(err) { console.error(err); addMessageToChat('Network error. Try again.','agent'); } finally { setAgentResponding(false); }
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    
+    if (!message || isAgentResponding) {
+        return;
+    }
+    
+    addMessageToChat(message, 'user');
+    messageInput.value = '';
+    setAgentResponding(true);
+    
+    try {
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            addMessageToChat(data.response, 'agent', data.tool_results);
+        } else {
+            addMessageToChat('Error: ' + data.error, 'agent');
+        }
+    } catch (error) {
+        console.error('Chat error:', error);
+        addMessageToChat('Network error. Please try again.', 'agent');
+    } finally {
+        setAgentResponding(false);
+    }
 }
 
-function addMessageToChat(message, sender, toolResults=null) {
-  const container = document.getElementById('chat-container');
-  const wrapper = document.createElement('div');
-  wrapper.className = 'message-with-avatar ' + (sender==='user'?'user-message-with-avatar':'');
-  const avatar = document.createElement('div'); avatar.className = (sender==='user'?'user-avatar':'ai-avatar'); avatar.textContent = sender==='user'?'You':'AI';
-  const content = document.createElement('div'); content.className = 'message-content ' + (sender==='user'?'user-message-content':'agent-message-content');
-  if (sender==='agent') { const h = document.createElement('div'); h.className='font-semibold text-green-300 mb-1'; h.textContent='AI Financial Agent'; content.appendChild(h); }
-  const body = document.createElement('div'); body.innerHTML = formatMessage(message); content.appendChild(body);
-  if (toolResults && toolResults.length>0) { const tr = document.createElement('div'); tr.className='tool-results'; tr.innerHTML = '<strong>Actions:</strong> '+toolResults.length+' operation(s)'; content.appendChild(tr); }
-  const meta = document.createElement('div'); meta.className='message-meta'; meta.textContent = new Date().toLocaleTimeString(); content.appendChild(meta);
-  wrapper.appendChild(avatar); wrapper.appendChild(content); container.appendChild(wrapper); container.scrollTop = container.scrollHeight;
+function addMessageToChat(message, sender, toolResults = null) {
+    const chatContainer = document.getElementById('chat-container');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message-with-avatar ${sender === 'user' ? 'user-message-with-avatar' : ''}`;
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = sender === 'user' ? 'user-avatar' : 'ai-avatar';
+    avatarDiv.innerHTML = sender === 'user' ?
+        `<svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>` :
+        `<svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>`;
+    
+    const messageContentDiv = document.createElement('div');
+    messageContentDiv.className = `message-content ${sender === 'user' ? 'user-message-content' : 'agent-message-content'}`;
+    
+    if (sender === 'agent') {
+        const agentNameDiv = document.createElement('div');
+        agentNameDiv.className = 'font-semibold text-green-400 mb-3 tracking-tight';
+        agentNameDiv.textContent = '🤖 AI Financial Agent';
+        messageContentDiv.appendChild(agentNameDiv);
+    }
+    
+    const messageTextDiv = document.createElement('div');
+    messageTextDiv.innerHTML = formatMessage(message);
+    messageContentDiv.appendChild(messageTextDiv);
+    
+    if (toolResults && toolResults.length > 0) {
+        const toolResultsDiv = document.createElement('div');
+        toolResultsDiv.className = 'tool-results';
+        const details = toolResults.map((r, i) => {
+            if (r.success) {
+                return `${i+1}. ${r.tool_name} <span class="text-green-400">✓</span>`;
+            } else {
+                return `${i+1}. ${r.tool_name} <span class="text-red-400">✗</span> - ${r.error || 'Unknown error'}`;
+            }
+        }).join('\n');
+        toolResultsDiv.innerHTML = `<strong class="font-semibold">Actions Performed:</strong> ${toolResults.length} operation(s)\n${details}`;
+        messageContentDiv.appendChild(toolResultsDiv);
+    }
+    
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    messageContentDiv.appendChild(timeDiv);
+    
+    messageDiv.appendChild(avatarDiv);
+    messageContentDiv.appendChild(timeDiv);
+    
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(messageContentDiv);
+    
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-function formatMessage(message){ return message.replace(/\n/g,'<br>'); }
-function setAgentResponding(v){ isAgentResponding=v; document.getElementById('send-button').disabled=v; document.getElementById('loading') && (document.getElementById('loading').style.display = v? 'block':'none'); document.getElementById('message-input').disabled=v; }
-function getCookie(name){ let cookieValue=null; if(document.cookie && document.cookie!==''){ const cookies=document.cookie.split(';'); for(let i=0;i<cookies.length;i++){ const c=cookies[i].trim(); if(c.substring(0,name.length+1)===name+'='){ cookieValue=decodeURIComponent(c.substring(name.length+1)); break; } } } return cookieValue; }
+function formatMessage(message) {
+    return message.replace(/\n/g, '<br>');
+}
+
+function setAgentResponding(responding) {
+    isAgentResponding = responding;
+    const sendButton = document.getElementById('send-button');
+    const loading = document.getElementById('loading');
+    const messageInput = document.getElementById('message-input');
+    
+    if (responding) {
+        sendButton.disabled = true;
+        loading.style.display = 'flex';
+        messageInput.disabled = true;
+    } else {
+        sendButton.disabled = false;
+        loading.style.display = 'none';
+        messageInput.disabled = false;
+        messageInput.focus();
+    }
+}
+
+async function clearChat() {
+    try {
+        const response = await fetch('/api/conversation/clear/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const data = await response.json();
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.innerHTML = '';
+        addMessageToChat('Conversation cleared. How may I assist you today?', 'agent');
+    } catch (e) {
+        addMessageToChat('Failed to clear conversation. Please try again.', 'agent');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 </script>
 {% endblock %}

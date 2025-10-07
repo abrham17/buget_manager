@@ -67,6 +67,15 @@ class OpenAIProvider(LLMProvider):
             raise
 
 
+class LocalMockProvider(LLMProvider):
+    """Local mock LLM provider for development without external API keys"""
+    def __init__(self, api_key: str = "", model_name: str = "local-mock"):
+        super().__init__(api_key, model_name)
+    async def generate_response(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+        last_user = next((m for m in reversed(messages) if m.get("role") == "user"), {"content": ""})
+        content = f"(Mocked) I received your message: '{last_user.get('content','')}'."
+        return {"content": content, "tool_calls": None, "usage": {}, "model": self.model_name}
+
 class AnthropicProvider(LLMProvider):
     """Anthropic Claude provider implementation"""
     
@@ -215,12 +224,13 @@ class MerchantFinancialAgent:
     
     def _initialize_provider(self) -> LLMProvider:
         """Initialize the LLM provider"""
-        if self.provider_name == "openai":
+        if self.provider_name == "openai" and self.api_key:
             return OpenAIProvider(self.api_key, self.model_name)
-        elif self.provider_name == "anthropic":
+        elif self.provider_name == "anthropic" and self.api_key:
             return AnthropicProvider(self.api_key, self.model_name)
-        else:
-            raise ValueError(f"Unsupported provider: {self.provider_name}")
+        # Fallback to local mock if no API key available
+        logger.warning("No valid API key found for provider; using LocalMockProvider for development.")
+        return LocalMockProvider()
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the agent"""
@@ -463,6 +473,12 @@ Remember: You are working with sensitive financial data, so always be precise an
 def create_agent(provider: str = "openai", api_key: Optional[str] = None, 
                 model_name: Optional[str] = None) -> MerchantFinancialAgent:
     """Create a new Merchant Financial Agent instance"""
+    # Auto-select provider if not specified explicitly
+    if provider == "openai" and not os.getenv("OPENAI_API_KEY") and os.getenv("HUGGINGFACE_API_TOKEN"):
+        provider = "huggingface"
+    env_provider = os.getenv("LLM_PROVIDER")
+    if env_provider:
+        provider = env_provider
     return MerchantFinancialAgent(provider, api_key, model_name)
 
 

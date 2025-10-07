@@ -4,8 +4,8 @@
 <div class="mb-8">
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Events & Deadlines</h1>
-            <p class="text-gray-600 mt-2">Track important business events and deadlines</p>
+            <h1 class="text-3xl font-bold text-white">Events & Deadlines</h1>
+            <p class="text-slate-400 mt-2">Track important business events and deadlines</p>
         </div>
         <a href="{% url 'add_event' %}" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
             + Add Event
@@ -13,12 +13,12 @@
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+<div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 mb-6">
     <h2 class="text-lg font-semibold mb-4">Filters</h2>
     <form method="get" class="grid md:grid-cols-2 gap-4">
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
+            <select name="status" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-white">
                 <option value="">All</option>
                 <option value="UPCOMING">Upcoming</option>
                 <option value="COMPLETED">Completed</option>
@@ -27,8 +27,8 @@
             </select>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-            <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Type</label>
+            <select name="type" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-white">
                 <option value="">All</option>
                 <option value="TAX_PAYMENT">Tax Payment</option>
                 <option value="INVOICE_DUE">Invoice Due</option>
@@ -48,7 +48,7 @@
 
 <div class="grid md:grid-cols-2 gap-6">
     {% for event in events %}
-    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 hover:shadow-xl transition">
         <div class="flex justify-between items-start mb-4">
             <h3 class="text-xl font-semibold">{{ event.title }}</h3>
             <span class="px-3 py-1 rounded text-sm font-medium
@@ -75,7 +75,7 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
-                {{ event.deadline_type|title|replace:"_":" " }}
+                {{ event.get_deadline_type_display }}
             </div>
             {% if event.amount %}
             <div class="flex items-center text-gray-700">
@@ -88,8 +88,8 @@
         </div>
     </div>
     {% empty %}
-    <div class="md:col-span-2 bg-white rounded-lg shadow-lg p-12 text-center">
-        <p class="text-gray-500 text-lg">No events found</p>
+    <div class="md:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
+        <p class="text-slate-400 text-lg">No events found</p>
     </div>
     {% endfor %}
 </div>

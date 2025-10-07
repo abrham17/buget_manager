@@ -44,19 +44,21 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">From Currency*</label>
-                        <input type="text" name="from_currency" maxlength="3" required 
-                               value="{% if result %}{{ result.from_currency }}{% else %}USD{% endif %}"
-                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white uppercase" 
-                               placeholder="USD">
+                        <select name="from_currency" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white">
+                            {% for code,label in (('USD','US Dollar'),('EUR','Euro'),('GBP','British Pound'),('JPY','Japanese Yen'),('CHF','Swiss Franc'),('CAD','Canadian Dollar'),('AUD','Australian Dollar'),('CNY','Chinese Yuan'),('INR','Indian Rupee'),('ETB','Ethiopian Birr'),('NGN','Nigerian Naira'),('ZAR','South African Rand')) %}
+                                <option value="{{ code }}" {% if result and result.from_currency == code %}selected{% elif not result and code == 'USD' %}selected{% endif %}>{{ code }} - {{ label }}</option>
+                            {% endfor %}
+                        </select>
                         <p class="text-xs text-slate-400 mt-1">3-letter code</p>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">To Currency*</label>
-                        <input type="text" name="to_currency" maxlength="3" required 
-                               value="{% if result %}{{ result.to_currency }}{% else %}EUR{% endif %}"
-                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white uppercase" 
-                               placeholder="EUR">
+                        <select name="to_currency" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white">
+                            {% for code,label in (('USD','US Dollar'),('EUR','Euro'),('GBP','British Pound'),('JPY','Japanese Yen'),('CHF','Swiss Franc'),('CAD','Canadian Dollar'),('AUD','Australian Dollar'),('CNY','Chinese Yuan'),('INR','Indian Rupee'),('ETB','Ethiopian Birr'),('NGN','Nigerian Naira'),('ZAR','South African Rand')) %}
+                                <option value="{{ code }}" {% if result and result.to_currency == code %}selected{% elif not result and code == 'EUR' %}selected{% endif %}>{{ code }} - {{ label }}</option>
+                            {% endfor %}
+                        </select>
                         <p class="text-xs text-slate-400 mt-1">3-letter code</p>
                     </div>
                 </div>

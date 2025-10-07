@@ -7,6 +7,7 @@ ensuring compliance and traceability for regulatory requirements.
 
 import json
 import logging
+import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from django.contrib.auth.models import User
@@ -69,11 +70,17 @@ class AuditTrailManager:
             old_values = self._sanitize_values(old_values)
             new_values = self._sanitize_values(new_values)
             
+            # Ensure UUID for object_id to satisfy UUIDField
+            try:
+                obj_uuid = object_id if isinstance(object_id, uuid.UUID) else uuid.UUID(str(object_id))
+            except (ValueError, TypeError, AttributeError):
+                obj_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"{model_name}:{object_id}")
+
             audit_log = AuditLog.objects.create(
                 merchant=merchant,
                 action=action,
                 model_name=model_name,
-                object_id=object_id,
+                object_id=obj_uuid,
                 old_values=old_values,
                 new_values=new_values,
                 ip_address=self._get_client_ip(request),
@@ -245,8 +252,38 @@ class AuditTrailManager:
         if metadata:
             security_metadata.update(metadata)
         
+        # Ensure we always have a valid user for the required merchant FK
+        system_user = merchant
+        if system_user is None:
+            try:
+                system_user, created = User.objects.get_or_create(
+                    username='system',
+                    defaults={
+                        'email': 'system@localhost',
+                        'is_staff': False,
+                        'is_superuser': False,
+                        'is_active': False,
+                    }
+                )
+                if created:
+                    try:
+                        system_user.set_unusable_password()
+                        system_user.save(update_fields=['password'])
+                    except Exception:
+                        pass
+            except Exception:
+                # As a last resort, pick any existing user to satisfy the FK
+                system_user = User.objects.order_by('id').first()
+                if system_user is None:
+                    # If absolutely no users exist yet, skip DB audit creation
+                    # and log to application logger only
+                    self.logger.warning(
+                        f"Skipping DB audit for {event_type}: no users available to attribute event"
+                    )
+                    return None
+        
         return self.log_action(
-            merchant=merchant or User.objects.get(id=1),  # System user if no merchant
+            merchant=system_user,
             action='SECURITY_EVENT',
             model_name='SECURITY',
             object_id=event_type,

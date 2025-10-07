@@ -287,3 +287,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # CSRF Configuration
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
+
+# Auth Redirects
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'

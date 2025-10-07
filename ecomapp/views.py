@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.utils.dateparse import parse_datetime
 from decimal import Decimal
 import requests
 import json
@@ -266,6 +267,12 @@ def add_transaction(request):
         category_id = request.POST.get('category')
         description = request.POST.get('description')
         transaction_date = request.POST.get('transaction_date')
+        # Ensure timezone-aware datetime
+        if transaction_date:
+            dt = parse_datetime(transaction_date)
+            if dt is not None and timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, timezone.get_current_timezone())
+            transaction_date = dt or timezone.now()
         payment_method = request.POST.get('payment_method', 'CASH')
         reference_id = request.POST.get('reference_id', '')
         currency = request.POST.get('currency', 'USD')
@@ -330,6 +337,12 @@ def add_event(request):
         title = request.POST.get('title')
         description = request.POST.get('description', '')
         event_date = request.POST.get('event_date')
+        # Ensure timezone-aware datetime
+        if event_date:
+            dt = parse_datetime(event_date)
+            if dt is not None and timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, timezone.get_current_timezone())
+            event_date = dt or timezone.now()
         end_date = request.POST.get('end_date')
         deadline_type = request.POST.get('deadline_type')
         priority = request.POST.get('priority', 'MEDIUM')
@@ -457,34 +470,79 @@ def currency_converter(request):
 
 
 def get_exchange_rate(from_currency, to_currency):
-    """Fetch exchange rate from external API"""
+    """Fetch exchange rate from external API with fallback and caching"""
     try:
+        # Try cache first (1 hour)
         cached_rate = CurrencyRate.objects.filter(
             base_currency=from_currency,
             target_currency=to_currency,
             fetched_at__gte=timezone.now() - timedelta(hours=1)
         ).first()
-        
-        if cached_rate:
+        if cached_rate and cached_rate.rate and cached_rate.rate > 0:
             return cached_rate.rate
-        
-        url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
-        response = requests.get(url, timeout=5)
-        
-        if response.status_code == 200:
-            data = response.json()
-            rate = Decimal(str(data['rates'].get(to_currency, 0)))
-            
-            CurrencyRate.objects.update_or_create(
-                base_currency=from_currency,
-                target_currency=to_currency,
-                defaults={'rate': rate}
-            )
-            
-            return rate
+
+        # Primary open API (no key required)
+        try:
+            url_primary = f"https://open.er-api.com/v6/latest/{from_currency}"
+            response = requests.get(url_primary, timeout=8)
+            if response.status_code == 200:
+                data = response.json()
+                # open.er-api.com returns { 'result': 'success', 'rates': { 'EUR': 0.9, ... } }
+                if data.get('result') == 'success' and 'rates' in data:
+                    val = data['rates'].get(to_currency)
+                    if val:
+                        rate = Decimal(str(val))
+                        if rate > 0:
+                            CurrencyRate.objects.update_or_create(
+                                base_currency=from_currency,
+                                target_currency=to_currency,
+                                defaults={'rate': rate, 'source_api': 'open-er-api'}
+                            )
+                            return rate
+        except Exception:
+            pass
+
+        # Fallback: exchangerate.host (free, no key)
+        try:
+            url_fallback = f"https://api.exchangerate.host/convert?from={from_currency}&to={to_currency}&amount=1"
+            response = requests.get(url_fallback, timeout=8)
+            if response.status_code == 200:
+                data = response.json()
+                val = data.get('info', {}).get('rate') or data.get('result')
+                if val:
+                    rate = Decimal(str(val))
+                    if rate > 0:
+                        CurrencyRate.objects.update_or_create(
+                            base_currency=from_currency,
+                            target_currency=to_currency,
+                            defaults={'rate': rate, 'source_api': 'exchangerate.host'}
+                        )
+                        return rate
+        except Exception:
+            pass
+
+        # Legacy endpoint (may require key); use as last resort
+        try:
+            url_legacy = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
+            response = requests.get(url_legacy, timeout=8)
+            if response.status_code == 200:
+                data = response.json()
+                val = data.get('rates', {}).get(to_currency)
+                if val:
+                    rate = Decimal(str(val))
+                    if rate > 0:
+                        CurrencyRate.objects.update_or_create(
+                            base_currency=from_currency,
+                            target_currency=to_currency,
+                            defaults={'rate': rate, 'source_api': 'exchangerate-api'}
+                        )
+                        return rate
+        except Exception:
+            pass
+
     except Exception as e:
         print(f"Error fetching exchange rate: {e}")
-    
+
     return None
 
 
@@ -504,7 +562,7 @@ def google_calendar_auth(request):
         SCOPES = ['https://www.googleapis.com/auth/calendar']
         
         # Check if credentials file exists
-        credentials_file = os.getenv('GOOGLE_CALENDAR_CREDENTIALS_FILE', 'credentials.json')
+        credentials_file = os.getenv('GOOGLE_CLIENT_SECRETS_FILE', 'credentials.json')
         if not os.path.exists(credentials_file):
             messages.error(request, 'Google Calendar credentials not configured')
             return redirect('dashboard')
@@ -550,7 +608,7 @@ def google_calendar_callback(request):
             return redirect('dashboard')
         
         # Create flow
-        credentials_file = os.getenv('GOOGLE_CALENDAR_CREDENTIALS_FILE', 'credentials.json')
+        credentials_file = os.getenv('GOOGLE_CLIENT_SECRETS_FILE', 'credentials.json')
         flow = InstalledAppFlow.from_client_secrets_file(
             credentials_file, SCOPES, state=state)
         
