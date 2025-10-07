@@ -334,40 +334,56 @@ def events_view(request):
 def add_event(request):
     """Add new event"""
     if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description', '')
-        event_date = request.POST.get('event_date')
-        # Ensure timezone-aware datetime
-        if event_date:
-            dt = parse_datetime(event_date)
-            if dt is not None and timezone.is_naive(dt):
-                dt = timezone.make_aware(dt, timezone.get_current_timezone())
-            event_date = dt or timezone.now()
-        end_date = request.POST.get('end_date')
-        deadline_type = request.POST.get('deadline_type')
-        priority = request.POST.get('priority', 'MEDIUM')
-        amount = request.POST.get('amount', None)
-        currency = request.POST.get('currency', 'USD')
-        location = request.POST.get('location', '')
-        
-        event = Event.objects.create(
-            merchant=request.user,
-            title=title,
-            description=description,
-            event_date=event_date,
-            end_date=end_date,
-            deadline_type=deadline_type,
-            priority=priority,
-            amount=amount if amount else None,
-            currency=currency,
-            location=location,
-            status='UPCOMING',
-            created_by=request.user
-        )
-        
-        messages.success(request, 'Event added successfully!')
-        return redirect('events')
-    
+        try:
+            title = request.POST.get('title')
+            description = request.POST.get('description', '')
+            event_date = request.POST.get('event_date')
+
+            # Ensure timezone-aware datetime
+            if event_date:
+                dt = parse_datetime(event_date)
+                if dt is not None and timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, timezone.get_current_timezone())
+                event_date = dt or timezone.now()
+            else:
+                event_date = timezone.now()
+
+            end_date = request.POST.get('end_date')
+            if end_date:
+                dt = parse_datetime(end_date)
+                if dt is not None and timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, timezone.get_current_timezone())
+                end_date = dt
+            else:
+                end_date = None
+
+            deadline_type = request.POST.get('deadline_type')
+            priority = request.POST.get('priority', 'MEDIUM')
+            amount = request.POST.get('amount', None)
+            currency = request.POST.get('currency', 'USD')
+            location = request.POST.get('location', '')
+
+            event = Event.objects.create(
+                merchant=request.user,
+                title=title,
+                description=description,
+                event_date=event_date,
+                end_date=end_date,
+                deadline_type=deadline_type,
+                priority=priority,
+                amount=amount if amount else None,
+                currency=currency,
+                location=location,
+                status='UPCOMING',
+                created_by=request.user
+            )
+
+            messages.success(request, 'Event added successfully!')
+            return redirect('events')
+        except Exception as e:
+            messages.error(request, f'Error creating event: {str(e)}')
+            return render(request, 'add_event.html')
+
     return render(request, 'add_event.html')
 
 
@@ -560,31 +576,31 @@ def google_calendar_auth(request):
     try:
         # Google Calendar API scopes
         SCOPES = ['https://www.googleapis.com/auth/calendar']
-        
+
         # Check if credentials file exists
         credentials_file = os.getenv('GOOGLE_CLIENT_SECRETS_FILE', 'credentials.json')
         if not os.path.exists(credentials_file):
-            messages.error(request, 'Google Calendar credentials not configured')
-            return redirect('dashboard')
-        
+            messages.warning(request, 'Google Calendar is not configured. Please contact support to enable this feature.')
+            return redirect('merchant_profile')
+
         # Create flow
         flow = InstalledAppFlow.from_client_secrets_file(
             credentials_file, SCOPES)
-        
+
         # Get authorization URL
         auth_url, _ = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true'
         )
-        
+
         # Store state in session
         request.session['google_auth_state'] = flow.state
-        
+
         return redirect(auth_url)
-        
+
     except Exception as e:
-        messages.error(request, f'Google Calendar authentication failed: {str(e)}')
-        return redirect('dashboard')
+        messages.warning(request, 'Google Calendar integration is currently unavailable. This feature requires additional setup.')
+        return redirect('merchant_profile')
 
 
 @login_required
@@ -593,35 +609,39 @@ def google_calendar_callback(request):
     try:
         # Google Calendar API scopes
         SCOPES = ['https://www.googleapis.com/auth/calendar']
-        
+
         # Get authorization code from callback
         code = request.GET.get('code')
         state = request.GET.get('state')
-        
+
         if not code or not state:
-            messages.error(request, 'Google Calendar authentication failed')
-            return redirect('dashboard')
-        
+            messages.warning(request, 'Google Calendar authentication was cancelled or failed')
+            return redirect('merchant_profile')
+
         # Verify state
         if state != request.session.get('google_auth_state'):
-            messages.error(request, 'Invalid state parameter')
-            return redirect('dashboard')
-        
+            messages.warning(request, 'Google Calendar authentication failed - invalid state')
+            return redirect('merchant_profile')
+
         # Create flow
         credentials_file = os.getenv('GOOGLE_CLIENT_SECRETS_FILE', 'credentials.json')
+        if not os.path.exists(credentials_file):
+            messages.warning(request, 'Google Calendar is not configured')
+            return redirect('merchant_profile')
+
         flow = InstalledAppFlow.from_client_secrets_file(
             credentials_file, SCOPES, state=state)
-        
+
         # Exchange code for credentials
         flow.fetch_token(code=code)
-        
+
         # Save credentials
         credentials = flow.credentials
         token_file = os.getenv('GOOGLE_CALENDAR_TOKEN_FILE', 'token.json')
-        
+
         with open(token_file, 'w') as token:
             token.write(credentials.to_json())
-        
+
         # Update merchant profile
         merchant_profile, created = MerchantProfile.objects.get_or_create(
             user=request.user,
@@ -630,16 +650,16 @@ def google_calendar_callback(request):
                 'business_type': 'OTHER'
             }
         )
-        
+
         merchant_profile.google_calendar_enabled = True
         merchant_profile.save()
-        
+
         # Test calendar access
         service = build('calendar', 'v3', credentials=credentials)
         calendar_list = service.calendarList().list().execute()
-        
+
         messages.success(request, 'Google Calendar connected successfully!')
-        
+
         # Log successful OAuth
         log_security_incident(
             merchant=request.user,
@@ -647,12 +667,12 @@ def google_calendar_callback(request):
             description='Google Calendar OAuth 2.0 connection established',
             severity='LOW'
         )
-        
-        return redirect('dashboard')
-        
+
+        return redirect('merchant_profile')
+
     except Exception as e:
-        messages.error(request, f'Google Calendar connection failed: {str(e)}')
-        
+        messages.warning(request, 'Google Calendar connection failed. Please try again or contact support.')
+
         # Log failed OAuth
         log_security_incident(
             merchant=request.user,
@@ -660,8 +680,8 @@ def google_calendar_callback(request):
             description=f'Google Calendar OAuth failed: {str(e)}',
             severity='MEDIUM'
         )
-        
-        return redirect('dashboard')
+
+        return redirect('merchant_profile')
 
 
 @login_required
@@ -676,17 +696,17 @@ def google_calendar_disconnect(request):
                 'business_type': 'OTHER'
             }
         )
-        
+
         merchant_profile.google_calendar_enabled = False
         merchant_profile.save()
-        
+
         # Remove token file
         token_file = os.getenv('GOOGLE_CALENDAR_TOKEN_FILE', 'token.json')
         if os.path.exists(token_file):
             os.remove(token_file)
-        
+
         messages.success(request, 'Google Calendar disconnected successfully!')
-        
+
         # Log disconnection
         log_security_incident(
             merchant=request.user,
@@ -694,12 +714,12 @@ def google_calendar_disconnect(request):
             description='Google Calendar integration disconnected',
             severity='LOW'
         )
-        
-        return redirect('dashboard')
-        
+
+        return redirect('merchant_profile')
+
     except Exception as e:
-        messages.error(request, f'Google Calendar disconnection failed: {str(e)}')
-        return redirect('dashboard')
+        messages.warning(request, 'Google Calendar disconnection failed')
+        return redirect('merchant_profile')
 
 
 @login_required

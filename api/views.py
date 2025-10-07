@@ -69,7 +69,7 @@ def create_audit_log(merchant_id: int, action: str, model_name: str,
 
 class AgentChatView(View):
     """Chat endpoint for AI agent interaction"""
-    
+
     @method_decorator(csrf_exempt)
     @method_decorator(login_required)
     async def post(self, request):
@@ -77,19 +77,29 @@ class AgentChatView(View):
         try:
             data = json.loads(request.body)
             user_input = data.get('message', '')
-            
+
             if not user_input:
                 return JsonResponse({'error': 'Message is required'}, status=400)
-            
+
             # Create agent instance
-            agent = create_agent()
-            
+            try:
+                agent = create_agent()
+                if agent is None:
+                    return JsonResponse({
+                        'error': 'AI Agent is not configured. Please contact support to enable this feature.'
+                    }, status=503)
+            except Exception as e:
+                logger.error(f"Agent creation error: {e}")
+                return JsonResponse({
+                    'error': 'AI Agent is temporarily unavailable. Using mock responses for development.'
+                }, status=503)
+
             # Process message
             response = await agent.process_message(
                 merchant_id=request.user.id,
                 user_input=user_input
             )
-            
+
             # Log AI interaction
             log_ai_interaction(
                 merchant=request.user,
@@ -98,18 +108,18 @@ class AgentChatView(View):
                 tool_calls=response.get('tool_results', []),
                 request=request
             )
-            
+
             return JsonResponse({
                 'response': response['content'],
                 'timestamp': response['timestamp'],
                 'tool_results': response.get('tool_results', [])
             })
-            
+
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             logger.error(f"Chat error: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({'error': f'Error processing message: {str(e)}'}, status=500)
 
 
 class FunctionCallView(View):
@@ -251,33 +261,58 @@ class ChainedOperationsView(View):
 
 class HealthCheckView(View):
     """Health check endpoint"""
-    
+
     async def get(self, request):
         """Perform system health check"""
         try:
-            # Check MCP orchestrator health
-            orchestrator_health = await mcp_orchestrator.health_check()
-            
-            # Check function calling engine
-            function_calling_health = {
-                'tools_available': len(function_calling_engine.get_available_tools()),
-                'status': 'healthy'
-            }
-            
-            # Overall health status
+            components = {}
             overall_status = 'healthy'
-            if orchestrator_health.get('overall_status') != 'healthy':
+
+            # Check MCP orchestrator health
+            try:
+                if mcp_orchestrator:
+                    orchestrator_health = await mcp_orchestrator.health_check()
+                    components['mcp_orchestrator'] = orchestrator_health
+                    if orchestrator_health.get('overall_status') != 'healthy':
+                        overall_status = 'degraded'
+                else:
+                    components['mcp_orchestrator'] = {'status': 'not_configured'}
+                    overall_status = 'degraded'
+            except Exception as e:
+                components['mcp_orchestrator'] = {'status': 'error', 'error': str(e)}
                 overall_status = 'degraded'
-            
+
+            # Check function calling engine
+            try:
+                if function_calling_engine:
+                    function_calling_health = {
+                        'tools_available': len(function_calling_engine.get_available_tools()),
+                        'status': 'healthy'
+                    }
+                    components['function_calling'] = function_calling_health
+                else:
+                    components['function_calling'] = {'status': 'not_configured'}
+            except Exception as e:
+                components['function_calling'] = {'status': 'error', 'error': str(e)}
+
+            # Check AI agent
+            try:
+                agent = create_agent()
+                if agent:
+                    components['ai_agent'] = {'status': 'healthy', 'provider': agent.provider_name}
+                else:
+                    components['ai_agent'] = {'status': 'not_configured'}
+                    overall_status = 'degraded'
+            except Exception as e:
+                components['ai_agent'] = {'status': 'error', 'error': str(e)}
+                overall_status = 'degraded'
+
             return JsonResponse({
                 'status': overall_status,
-                'components': {
-                    'mcp_orchestrator': orchestrator_health,
-                    'function_calling': function_calling_health
-                },
+                'components': components,
                 'timestamp': datetime.now().isoformat()
             })
-            
+
         except Exception as e:
             logger.error(f"Health check error: {e}")
             return JsonResponse({

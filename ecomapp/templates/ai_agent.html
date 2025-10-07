@@ -425,14 +425,17 @@ async function checkAgentStatus() {
     try {
         const response = await fetch('/api/health/');
         const data = await response.json();
-        
+
         const statusElement = document.getElementById('agent-status');
         if (data.status === 'healthy') {
             statusElement.className = 'agent-status status-healthy';
             statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Online';
+        } else if (data.status === 'degraded') {
+            statusElement.className = 'agent-status status-unhealthy';
+            statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Limited Mode';
         } else {
             statusElement.className = 'agent-status status-unhealthy';
-            statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Offline';
+            statusElement.innerHTML = '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Offline';
         }
     } catch (error) {
         const statusElement = document.getElementById('agent-status');
@@ -449,15 +452,15 @@ function sendQuickMessage(message) { document.getElementById('message-input').va
 async function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const message = messageInput.value.trim();
-    
+
     if (!message || isAgentResponding) {
         return;
     }
-    
+
     addMessageToChat(message, 'user');
     messageInput.value = '';
     setAgentResponding(true);
-    
+
     try {
         const response = await fetch('/api/chat/', {
             method: 'POST',
@@ -467,17 +470,19 @@ async function sendMessage() {
             },
             body: JSON.stringify({ message: message })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             addMessageToChat(data.response, 'agent', data.tool_results);
+        } else if (response.status === 503) {
+            addMessageToChat('The AI agent is currently running in limited mode. Full AI features require additional configuration. You can still use the dashboard, transactions, events, and reports features.', 'agent');
         } else {
-            addMessageToChat('Error: ' + data.error, 'agent');
+            addMessageToChat('Sorry, I encountered an error processing your request. Please try again or use the other features of the application.', 'agent');
         }
     } catch (error) {
         console.error('Chat error:', error);
-        addMessageToChat('Network error. Please try again.', 'agent');
+        addMessageToChat('Unable to connect to the AI agent. Please check your connection and try again.', 'agent');
     } finally {
         setAgentResponding(false);
     }
